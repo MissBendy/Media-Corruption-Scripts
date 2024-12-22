@@ -1,0 +1,23 @@
+DIRECTORIES:
+  TV Shows:
+    - /Volumes/Media1/TV/
+    - /Volumes/Media2/TV/
+    - /Volumes/Media3/TV/
+    - /Volumes/Media4/TV/
+    - /Volumes/MediaSSD/Temp/TV/
+  Anime:
+    - /Volumes/Media1/Anime/
+    - /Volumes/Media2/Anime/
+    - /Volumes/Media3/Anime/
+    - /Volumes/Media4/Anime/
+    - /Volumes/MediaSSD/Temp/Anime/
+  Movies:
+    - /Volumes/Media1/Movies/
+    - /Volumes/Media2/Movies/
+    - /Volumes/Media3/Movies/
+    - /Volumes/Media4/Movies/
+    - /Volumes/MediaSSD/Temp/Movies/
+OUTPUT_FILES:
+  TV Shows: Corrupt_TV_Shows.csv
+  Anime: Corrupt_Anime.csv
+  Movies: Corrupt_Movies.csv

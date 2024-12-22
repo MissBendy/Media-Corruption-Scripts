@@ -1,0 +1,5 @@
+MAX_THREADS: 8
+DIRECTORIES:
+#  - /Volumes/Media1/Music
+#  - /Volumes/Media2/Music
+  - /Volumes/MediaSSD/Backups/Music
