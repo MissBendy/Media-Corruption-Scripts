@@ -1,4 +1,4 @@
-MAX_THREADS: 8
+MAX_THREADS: 16
 DIRECTORIES:
 #  - /Volumes/Media1/Music
 #  - /Volumes/Media2/Music

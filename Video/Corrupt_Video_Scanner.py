@@ -8,6 +8,35 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import init, Fore, Style
 from tqdm import tqdm
 
+
+# Function to hide the cursor
+def hide_cursor():
+    if sys.platform == "win32":  # Windows
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        h_console = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = ctypes.c_ulong()
+        kernel32.GetConsoleMode(h_console, ctypes.byref(mode))
+        kernel32.SetConsoleMode(h_console, mode.value & ~0x20)  # Disable ENABLE_PROCESSED_OUTPUT
+    else:  # POSIX (Linux/macOS)
+        sys.stdout.write("\033[?25l")  # Hide cursor
+        sys.stdout.flush()
+
+
+# Function to show the cursor
+def show_cursor():
+    if sys.platform == "win32":  # Windows
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        h_console = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = ctypes.c_ulong()
+        kernel32.GetConsoleMode(h_console, ctypes.byref(mode))
+        kernel32.SetConsoleMode(h_console, mode.value | 0x20)  # Enable ENABLE_PROCESSED_OUTPUT
+    else:  # POSIX (Linux/macOS)
+        sys.stdout.write("\033[?25h")  # Show cursor
+        sys.stdout.flush()
+
+
 # Initialize colorama
 init(autoreset=True)
 
@@ -17,7 +46,7 @@ def handle_error_and_exit(message):
     sys.stdout.write(f"Error: {message}\nPress Enter to exit the script.")
     sys.stdout.flush()  # Ensure the message is displayed immediately
     input()
-    sys.exit(f"Exiting due to error: {message}")
+    sys.exit(f"{Fore.RED}Exiting due to error: {message}")
 
 
 def check_python_version():
@@ -25,17 +54,20 @@ def check_python_version():
     current_version = sys.version_info
 
     # Ensure that the Python version is between 3.10 and 3.12
-    if current_version < (3, 10) or current_version >= (3, 13):
+    if current_version < (3, 10) or current_version >= (3, 14):
         handle_error_and_exit(
-            f"{Fore.RED}This script requires Python version between 3.10 and 3.12. {Style.RESET_ALL}\n"
+            f"{Fore.RED}This script requires Python version between 3.10 and 3.13. {Style.RESET_ALL}\n"
             f"You are using Python {current_version.major}.{current_version.minor}."
         )
     print(f"{Fore.YELLOW}Python version is compatible. Proceeding with the script...{Style.RESET_ALL}")
 
 
-# Load directories from a configuration file
-CONFIG_FILE = "Config/Config.yaml"
-RESULTS_DIR = "Results"
+# Resolve the base path dynamically based on the script's location
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
+# Define dynamic paths for configuration file and results directory
+CONFIG_FILE = os.path.join(BASE_PATH, "Config", "Config.yaml")
+RESULTS_DIR = os.path.join(BASE_PATH, "Results")
 
 # Ensure the Results directory exists
 os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -127,7 +159,6 @@ def process_section(section_name, directories, output_file):
 
 
 def main():
-    # Check dependencies before running the main logic
 
     start_time = time.time()
     total_corrupted = {"TV Shows": 0, "Anime": 0, "Movies": 0}
