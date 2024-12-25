@@ -63,29 +63,32 @@ def run_scan(scan_type, script_folder, venv_path):
 
 def edit_config(file_path):
     """
-    Open the config file in a text editor.
-    - On Windows, tries Notepad++ first, then falls back to Notepad.
-    - On Unix-like systems, uses the default editor specified in the EDITOR environment variable or defaults to nano.
+    Open the config file in nano on Windows.
+    - On Windows, only uses nano (if available).
+    - On Unix-like systems (Linux/macOS), uses nano if available, falls back to the default editor.
     """
     if sys.platform == "win32":
         try:
-            subprocess.run(["notepad++.exe", file_path], check=True)
+            # Try using nano on Windows (e.g., if installed via Chocolatey or another package manager)
+            subprocess.run(["nano", file_path], check=True)
         except FileNotFoundError:
-            print("Notepad++ not found, falling back to Notepad.")
-            try:
-                subprocess.run(["notepad.exe", file_path], check=True)
-            except FileNotFoundError:
-                print("Notepad not found. Please install a text editor.")
+            print("Nano not found. Please install nano.")
         except Exception as e:
             print(f"An error occurred while trying to edit the file: {e}")
     else:
-        editor = os.environ.get("EDITOR", "nano")
+        # On Linux/macOS, try using nano first, otherwise use the default system editor
+        editor = "nano"  # Default to nano
         try:
             subprocess.run([editor, file_path], check=True)
         except FileNotFoundError:
-            print(f"Editor '{editor}' not found. Please install it or set the EDITOR environment variable.")
-        except Exception as e:
-            print(f"An error occurred while trying to edit the file: {e}")
+            print(f"{editor} not found. Falling back to the default editor.")
+            editor = os.environ.get("EDITOR", "vi")  # Use $EDITOR environment variable, defaulting to vi
+            try:
+                subprocess.run([editor, file_path], check=True)
+            except FileNotFoundError:
+                print(f"{editor} not found. Please install an editor.")
+            except Exception as e:
+                print(f"An error occurred while trying to edit the file: {e}")
 
 
 def validate_choice(choice, valid_choices):

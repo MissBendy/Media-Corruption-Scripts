@@ -133,11 +133,20 @@ class FFmpegInstaller:
 
                     print("Installing FFmpeg using Homebrew...")
                     subprocess.check_call(["brew", "install", "ffmpeg"])
-                    print("FFmpeg has been installed via Homebrew.")
+                    print(f"{Fore.GREEN}FFmpeg has been installed via Homebrew.")
 
                 case "windows":
+                    try:
+                        # Check if FFmpeg is already installed
+                        subprocess.check_call(["where", "ffmpeg"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        print(f"{Fore.GREEN}FFmpeg is already installed.{Fore.RESET}")
+                        return
+                    except subprocess.CalledProcessError:
+                        print(f"{Fore.YELLOW}{Style.BRIGHT}FFmpeg not found. Proceeding with installation.{Fore.RESET}")
+
+                    print(f"{Fore.BLUE}{Style.BRIGHT}Installing FFmpeg with winget...{Fore.RESET}")
                     subprocess.check_call(["winget", "install", "ffmpeg"])
-                    print("FFmpeg has been installed using winget.")
+                    print(f"{Fore.GREEN}FFmpeg has been installed using winget.{Fore.RESET}")
 
                 case "linux":
                     distro_type = System.detected_distro_type or System.detect_OS()
@@ -237,6 +246,45 @@ class ProgramSetup:
 
     @staticmethod
     def install_dependencies(venv_path):
+        if sys.platform == 'win32':
+            # Ensure Chocolatey is installed
+            try:
+                subprocess.check_call(["choco", "-v"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"{Fore.GREEN}Chocolatey is already installed.")
+            except subprocess.CalledProcessError:
+                print(f"{Fore.YELLOW}{Style.BRIGHT}Chocolatey not found. Proceeding with installation.")
+                try:
+                    print(f"{Fore.BLUE}{Style.BRIGHT}Installing Chocolatey with winget...")
+                    subprocess.check_call(["winget", "install", "Chocolatey.Chocolatey"])
+                    print(f"{Fore.GREEN}Chocolatey has been installed using winget.")
+                except subprocess.CalledProcessError as e:
+                    print(f"{Fore.RED}Failed to install Chocolatey: {e}")
+                    return
+
+            # Check if Nano is installed
+            try:
+                subprocess.check_call(["nano", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"{Fore.GREEN}Nano is already installed.")
+                return
+            except FileNotFoundError:
+                print(f"{Fore.YELLOW}{Style.BRIGHT}Nano is not installed. Proceeding with installation.")
+            except subprocess.CalledProcessError as e:
+                print(f"{Fore.RED}An error occurred while checking Nano: {e}. Proceeding with installation.")
+
+            # Install Nano using Chocolatey
+            try:
+                print(f"{Fore.BLUE}{Style.BRIGHT}Installing Nano using Chocolatey...")
+                subprocess.check_call(
+                    [
+                        "powershell",
+                        "-Command",
+                        "Start-Process powershell -Verb runAs -ArgumentList 'choco install nano -y'"
+                    ]
+                )
+                print(f"{Fore.GREEN}Nano has been installed successfully.")
+            except subprocess.CalledProcessError as e:
+                print(f"{Fore.RED}Failed to install Nano: {e}")
+
         """Install required packages into the virtual environment."""
         # Ensure pip is installed first
         ProgramSetup.check_and_install_pip(venv_path)
@@ -258,38 +306,11 @@ class ProgramSetup:
         missing_packages = [pkg for pkg in packages if pkg.lower() not in installed_package_names]
 
         if missing_packages:
-            print(f"Installing missing dependencies: {', '.join(missing_packages)}...")
+            print(f"Installing missing python packages: {', '.join(missing_packages)}...")
             subprocess.check_call([pip_path, "install"] + missing_packages)
             print(f"{Fore.GREEN}Missing dependencies installed successfully.")
         else:
-            print(f"{Fore.GREEN}All dependencies are already installed.")
-
-        # Check if the script is running on Windows and if Chocolatey is installed
-        if sys.platform == 'win32':
-            # Check if Chocolatey is already installed
-            try:
-                subprocess.check_call(["choco", "-v"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                print(f"{Fore.GREEN}Chocolatey is already installed.")
-            except subprocess.CalledProcessError:
-                print(f"{Fore.RED}Chocolatey not found. Installing Chocolatey...")
-                try:
-                    # Install Chocolatey using PowerShell
-                    subprocess.check_call([
-                        "powershell", "-Command",
-                        "Set-ExecutionPolicy Bypass -Scope Process -Force; "
-                        "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
-                    ])
-                    print(f"{Fore.GREEN}Chocolatey has been installed.")
-                except subprocess.CalledProcessError as e:
-                    print(f"{Fore.RED}Failed to install Chocolatey: {e}")
-                    return
-
-            # Install Nano using Chocolatey
-            try:
-                subprocess.check_call(["choco", "install", "nano", "-y"])
-                print(f"{Fore.GREEN}Nano has been installed using Chocolatey.")
-            except subprocess.CalledProcessError as e:
-                print(f"{Fore.RED}Failed to install Nano: {e}")
+            print(f"{Fore.GREEN}All dependencies are installed.")
 
     @staticmethod
     def generate_terminal_script(venv_path):
@@ -362,7 +383,8 @@ class Cleanup:
     @staticmethod
     def prompt_delete_setup():
         """Ask the user if they want to delete setup.py after the script completes."""
-        response = input(f"{Fore.RED}{Style.BRIGHT}Do you want to delete setup.py? (y/n):{Style.RESET_ALL} ").strip().lower()
+        response = input(
+            f"{Fore.RED}{Style.BRIGHT}Do you want to delete setup.py?{Style.RESET_ALL} (y/n): ").strip().lower()
         if response == 'y':
             try:
                 script_path = os.path.realpath(__file__)

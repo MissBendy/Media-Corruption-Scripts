@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import csv
 import time
 import yaml
@@ -7,34 +7,6 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import init, Fore, Style
 from tqdm import tqdm
-
-
-# Function to hide the cursor
-def hide_cursor():
-    if sys.platform == "win32":  # Windows
-        import ctypes
-        kernel32 = ctypes.windll.kernel32
-        h_console = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
-        mode = ctypes.c_ulong()
-        kernel32.GetConsoleMode(h_console, ctypes.byref(mode))
-        kernel32.SetConsoleMode(h_console, mode.value & ~0x20)  # Disable ENABLE_PROCESSED_OUTPUT
-    else:  # POSIX (Linux/macOS)
-        sys.stdout.write("\033[?25l")  # Hide cursor
-        sys.stdout.flush()
-
-
-# Function to show the cursor
-def show_cursor():
-    if sys.platform == "win32":  # Windows
-        import ctypes
-        kernel32 = ctypes.windll.kernel32
-        h_console = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
-        mode = ctypes.c_ulong()
-        kernel32.GetConsoleMode(h_console, ctypes.byref(mode))
-        kernel32.SetConsoleMode(h_console, mode.value | 0x20)  # Enable ENABLE_PROCESSED_OUTPUT
-    else:  # POSIX (Linux/macOS)
-        sys.stdout.write("\033[?25h")  # Show cursor
-        sys.stdout.flush()
 
 
 # Initialize colorama
@@ -46,19 +18,18 @@ def handle_error_and_exit(message):
     sys.stdout.write(f"Error: {message}\nPress Enter to exit the script.")
     sys.stdout.flush()  # Ensure the message is displayed immediately
     input()
-    sys.exit(f"{Fore.RED}Exiting due to error: {message}")
+    sys.exit(f"{Fore.RED}Exiting due to error:{Style.RESET_ALL} {message}")
 
 
 def check_python_version():
     """Ensure the script is running on a compatible Python version."""
     current_version = sys.version_info
 
-    # Ensure that the Python version is between 3.10 and 3.12
+    # Ensure that the Python version is between 3.10 and 3.13
     if current_version < (3, 10) or current_version >= (3, 14):
         handle_error_and_exit(
             f"{Fore.RED}This script requires Python version between 3.10 and 3.13. {Style.RESET_ALL}\n"
-            f"You are using Python {current_version.major}.{current_version.minor}."
-        )
+            f"You are using Python {current_version.major}.{current_version.minor}.")
     print(f"{Fore.YELLOW}Python version is compatible. Proceeding with the script...{Style.RESET_ALL}")
 
 

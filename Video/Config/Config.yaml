@@ -1,5 +1,5 @@
 DIRECTORIES:
-  TV Shows:
+  TV_Shows:
     - /Volumes/Media1/TV/
     - /Volumes/Media2/TV/
     - /Volumes/Media3/TV/
@@ -18,6 +18,6 @@ DIRECTORIES:
     - /Volumes/Media4/Movies/
     - /Volumes/MediaSSD/Temp/Movies/
 OUTPUT_FILES:
-  TV Shows: Corrupt_TV_Shows.csv
+  TV_Shows: Corrupt_TV_Shows.csv
   Anime: Corrupt_Anime.csv
   Movies: Corrupt_Movies.csv
