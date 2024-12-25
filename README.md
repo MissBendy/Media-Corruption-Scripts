@@ -25,6 +25,6 @@ Python modules needed to run script include the following
 
 <ins>**Cross-Platform Dependency Check:**</ins> $~$ Setup script will look for required installations across Windows, macOS and Linux.
 
-<ins>**Platform-Specific Installations:**</ins> $~$ Based on the platform (Windows, macOS or Linux <br />
+<ins>**Platform-Specific Installations:**</ins> $~$ Based on the platform (Windows, macOS or Linux) <br />
 
 -----------------------------------------------------------------------------------------------------------------------
