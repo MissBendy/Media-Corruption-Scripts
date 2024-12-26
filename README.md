@@ -3,7 +3,7 @@
 Python scripts to scan Audio and Video files to detect corruption on media. <br />
 Corrupted file details are saved to a CSV file for easy review.
 
-Run Setup to download dependencies, create virtual python enviroment and required terminal script to run the program.
+Run Setup to download dependencies, create virtual python environment and required terminal script to run the program.
 
 Scripts only support Python 3.10 through 3.13. 
 
