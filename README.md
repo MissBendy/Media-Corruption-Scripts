@@ -23,6 +23,13 @@ Python modules needed to run script include the following
 
 -----------------------------------------------------------------------------------------------------------------------
 
+<ins>**Other Required Software That Installs Automatically:**</ins> $~$ FFmpeg, Chocolately, Nano or Terminal Editor
+
+FFmpeg is a multimedia framework that can check video integrity without errors spilling into the terminal. <br />
+It works reliably across video/audio codecs and containers. If FFmpeg cannot decode the file, the file is considered corrupt.<br />
+
+Chocolatey is software management automation for Windows that wraps installers, executables, zips, and scripts into compiled packages.
+
 <ins>**Cross-Platform Dependency Check:**</ins> $~$ Setup script will look for required installations across Windows, macOS and Linux.
 
 <ins>**Platform-Specific Installations:**</ins> $~$ Based on the platform (Windows, macOS or Linux) <br />
