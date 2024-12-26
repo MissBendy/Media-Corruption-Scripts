@@ -23,7 +23,10 @@ Python modules needed to run script include the following
 
 **Video Scanner:**
 * validates metadata: Uses ffprobe to check if the video metadata is valid. If not, returns an error.
-* validates playback: Uses ffmpeg to check if the video plays correctly at three different positions: the start, middle, and end. It uses hardware acceleration via auto detection for better performance.
+* validates playback: Uses ffmpeg to check if the video plays correctly with options for scanning.
+
+**Audio Scanner**
+* Uses the same methods above, but no options to choose from. Will scan beginning, middle and end of files along with metadata.
 
 -----------------------------------------------------------------------------------------------------------------------
 
