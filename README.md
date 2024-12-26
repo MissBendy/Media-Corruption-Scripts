@@ -12,7 +12,6 @@ MUST BE CHANGED TO WORK WITH YOUR SYSTEM
 
 **EXAMPLE USAGE UNIX --> $~$ python3.12 Setup.py** <br />
 **EXAMPLE USAGE WIN --> $~$ py -3.12 Setup.py** <br />
-Then execute run_script file made for your system
 
 -----------------------------------------------------------------------------------------------------------------------
 
