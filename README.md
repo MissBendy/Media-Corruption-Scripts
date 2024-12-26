@@ -21,6 +21,10 @@ Python modules needed to run script include the following
 * pyyaml $~~~~~~$ # For YAML file support
 * colorama $~~$ # For colored terminal output
 
+**Video Scanner:**
+* validates metadata: Uses ffprobe to check if the video metadata is valid. If not, returns an error.
+* validates playback: Uses ffmpeg to check if the video plays correctly at three different positions: the start, middle, and end. It uses hardware acceleration via auto detection for better performance.
+
 -----------------------------------------------------------------------------------------------------------------------
 
 <ins>**Other Required Software That Installs Automatically:**</ins> $~$ FFmpeg, Chocolately, Nano or Terminal Editor
