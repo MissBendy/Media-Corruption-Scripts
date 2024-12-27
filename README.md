@@ -17,9 +17,10 @@ MUST BE CHANGED TO WORK WITH YOUR SYSTEM
 
 Python modules needed to run script include the following
 
+* colorama $~~$ # For colored terminal output
 * tqdm $~~~~~~~~~~$ # For progress bar display
 * pyyaml $~~~~~~$ # For YAML file support
-* colorama $~~$ # For colored terminal output
+* psutil $~~~~~~$ For retrieving information on running processes
 
 **Video Scanner:**
 * validates metadata: Uses ffprobe to check if the video metadata is valid. If not, returns an error.
