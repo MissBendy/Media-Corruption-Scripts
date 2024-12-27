@@ -46,3 +46,7 @@ Chocolatey is software management automation for Windows that wraps installers, 
 
 > [!IMPORTANT]
 > Windows will prompt for admin rights to install Nano via Chocolatey
+
+> [!NOTE]
+> When using hardware decoding the CSV output pay report timeouts for incompatible codecs. <br />
+> Such files will need to be checked manually until I figure out a fallback to software.
