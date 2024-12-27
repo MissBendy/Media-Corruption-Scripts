@@ -1,6 +1,8 @@
-import sys
-import subprocess
 import os
+import sys
+import time
+import psutil
+import subprocess
 
 
 def clear_screen():
@@ -36,29 +38,87 @@ def run_scan(scan_type, script_folder, venv_path):
     Run a corruption scan based on the type (video or audio) using the Python from the virtual environment.
 
     Args:
-        scan_type (str): Type of scan, either 'video' or 'audio'.
+        scan_type (str): Type of scan, e.g., 'video_meta', 'video_play_hardware', etc.
         script_folder (str): The folder where the scripts are located.
         venv_path (str): Path to the virtual environment.
     """
     # Clear the screen before starting the scan
     clear_screen()
 
-    scanner_script = os.path.join(
-        script_folder, "Video/Corrupt_Video_Scanner.py" if scan_type == "video" else "Audio/Corrupt_Audio_Scanner.py"
-    )
+    # Determine the script path based on the scan type
+    script_mapping = {
+        "audio": "Audio/Corrupt_Audio_Scanner.py",
+        "video_meta": "Video/Corrupt_Video_Scanner_MetaData.py",
+        "video_play_hardware": "Video/Corrupt_Video_Scanner_Playback_hardware.py",
+        "video_play_software": "Video/Corrupt_Video_Scanner_Playback_software.py",
+        "video_play_indepth_hardware": "Video/Corrupt_Video_Scanner_InDepth_hardware.py",
+        "video_play_indepth_software": "Video/Corrupt_Video_Scanner_InDepth_software.py"
+    }
+
+    script_name = script_mapping.get(scan_type)
+    if not script_name:
+        print(f"Error: Invalid scan type '{scan_type}'.")
+        time.sleep(0.25)  # Pause
+        return
+
+    scanner_script = os.path.join(script_folder, script_name)
 
     if not os.path.isfile(scanner_script):
         print(f"Error: The scanner script '{scanner_script}' does not exist.")
         return
 
-    print(f"Running {scan_type} corruption scan...")
+    print(f"Running corruption scan...")
 
     python_exec = get_python_from_venv(venv_path)
     if python_exec:
+        process = None  # Initialize process to None
         try:
-            subprocess.check_call([python_exec, scanner_script])
+            # Run the script as a standalone process (no output redirection)
+            process = subprocess.Popen([python_exec, "-u", scanner_script],
+                                       text=True,  # Ensure text output (no buffering issues)
+                                       pass_fds=(),  # Make sure file descriptors are not passed
+                                       close_fds=True)  # Ensure no file descriptors are shared
+
+            process.wait()  # Wait for the process to finish before continuing
+
+            # After the scan finishes, check for any zombie processes related to ffmpeg, ffprobe, or python
+            terminate_zombies()
+
         except subprocess.CalledProcessError as e:
-            print(f"Error while running {scan_type} corruption scan: {e}")
+            print(f"Error while running corruption scan: {e}")
+        finally:
+            if process:  # Ensure process is not None before calling terminate
+                process.wait()  # Reap the process to prevent zombies
+                process.terminate()  # Ensure process is terminated
+            subprocess.run(["stty", "sane"])   # Reset the terminal to a sane state
+            # Hold the screen until the user presses Enter
+            input("\nScan complete. Press Enter to return to the menu...")
+
+
+def terminate_zombies():
+    """
+    Checks for any lingering zombie processes (ffmpeg, ffprobe, python) and terminates them.
+    """
+    # Check all running processes
+    for proc in psutil.process_iter(attrs=['pid', 'name', 'status']):
+        try:
+            # Access attributes using getattr to avoid potential attribute errors
+            pid = getattr(proc, 'pid', None)
+            name = getattr(proc, 'name', 'Unknown')
+            status = getattr(proc, 'status', 'unknown')
+
+            # For Linux/macOS, check for zombie processes
+            if sys.platform in ["linux", "darwin"]:  # Check for zombie processes on Linux/macOS
+                if status == psutil.STATUS_ZOMBIE and name in ['ffmpeg', 'ffprobe', 'python']:
+                    print(f"Terminating zombie process: {name} (PID: {pid})")
+                    proc.terminate()  # Kill the zombie process
+            else:  # Windows does not have STATUS_ZOMBIE, so check for other conditions
+                if name in ['ffmpeg', 'ffprobe', 'python']:
+                    print(f"Terminating process: {name} (PID: {pid})")
+                    proc.terminate()  # Terminate the process on Windows
+
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass  # Ignore errors, such as process disappearing or permission issues
 
 
 def edit_config(file_path):
@@ -91,45 +151,109 @@ def edit_config(file_path):
                 print(f"An error occurred while trying to edit the file: {e}")
 
 
-def validate_choice(choice, valid_choices):
+def get_user_choice(prompt, valid_choices):
     """
-    Validate the user's menu choice.
+    Display a prompt and validate user input until a valid choice is made.
+
     Args:
-        choice (str): The user's input.
-        valid_choices (list): A list of valid choices.
+        prompt (str): The message to display to the user.
+        valid_choices (list): A list of valid choices to validate user input against.
+
     Returns:
-        bool: True if valid, False otherwise.
+        str: The valid user input choice.
     """
-    return choice in valid_choices
+    while True:
+        choice = input(prompt).strip()
+        if choice in valid_choices:
+            return choice
+        else:
+            print("Invalid choice. Please try again.")
+            time.sleep(0.25)  # Pause for a moment before showing the prompt again
+
+
+def show_video_menu():
+    script_folder = os.path.dirname(os.path.realpath(__file__))
+    venv_path = os.path.join(script_folder, "venv")
+
+    while True:
+        clear_screen()
+        print("Video Menu:")
+        print("1. Scan Video for Metadata (Fast)")
+        print("2. Scan Video for Playback (Slower)")
+        print("3. Scan Video for Playback at Multiple Points (Slowest)")
+        print("0. Return to Main Menu")
+
+        choice = get_user_choice("Please enter your choice (0-3): ", ["1", "2", "3", "0"])
+
+        match choice:
+            case "1":
+                run_scan("video_meta", script_folder, venv_path)
+            case "2" | "3":
+                decoding_choice = get_decoding_choice()
+                if decoding_choice:  # Only proceed if user did not cancel
+                    scan_type = (
+                        "video_play" if choice == "2" else "video_play_indepth"
+                    )
+                    script_name = f"{scan_type}_{decoding_choice}"
+                    run_scan(script_name, script_folder, venv_path)
+            case "0":
+                print("Returning to Main Menu...")
+                time.sleep(0.2)  # Pause
+                break
+
+
+def get_decoding_choice():
+    """
+    Display a submenu to choose between hardware or software decoding.
+
+    Returns:
+        str: 'hardware' or 'software' based on user selection.
+    """
+    decoding_choices = {
+        "1": "hardware",
+        "2": "software",
+        "0": None  # None represents cancel
+    }
+
+    while True:
+        clear_screen()
+        print("Select Decoding Method:")
+        print("1. Hardware Decoding (Faster)")
+        print("2. Software Decoding (Slower)")
+        print("0. Cancel and Return to Previous Menu")
+
+        choice = get_user_choice("Please enter your choice (0-2): ", ["1", "2", "0"])
+
+        if choice == "0":
+            print("Returning to Video Menu...")
+            time.sleep(0.2)  # Pause
+            return None  # Return None if the user cancels
+
+        return decoding_choices[choice]  # Return 'hardware' or 'software'
 
 
 def show_options_menu():
-    """
-    Display the submenu for editing configuration files and handle user selection.
-    """
     while True:
         clear_screen()
         print("Options Menu:")
-        print("1. Edit config for Video")
-        print("2. Edit config for Audio")
-        print("3. Update pip and installed packages")
-        print("4. Return to Main Menu")
+        print("1. Edit Config for Audio")
+        print("2. Edit Config for Video")
+        print("3. Update pip and Installed Packages")
+        print("0. Return to Main Menu")
 
-        choice = input("Please enter your choice (1-4): ").strip()
+        choice = get_user_choice("Please enter your choice (0-3): ", ["1", "2", "3", "0"])
 
-        if not validate_choice(choice, ["1", "2", "3", "4"]):
-            print("Invalid choice. Please try again.")
-            continue
-
-        if choice == "1":
-            edit_config("Video/Config/config.yaml")
-        elif choice == "2":
-            edit_config("Audio/Config/config.yaml")
-        elif choice == "3":
-            update_pip_and_packages()
-        elif choice == "4":
-            print("Returning to main menu...")
-            break
+        match choice:
+            case "1":
+                edit_config("Audio/Config/config.yaml")
+            case "2":
+                edit_config("Video/Config/config.yaml")
+            case "3":
+                update_pip_and_packages()
+            case "0":
+                print("Returning to Main Menu...")
+                time.sleep(0.2)  # Pause
+                break
 
 
 def update_pip_and_packages():
@@ -196,30 +320,26 @@ def main():
     while True:
         clear_screen()
         print("What do you want to do?")
-        print("1. Run corruption scan on Audio")
-        print("2. Run corruption scan on Video")
-        print("3. Run corruption scan on Video then Audio")
-        print("4. Options")
-        print("5. Exit")
+        print("1. Run Corruption Scan on Audio")
+        print("2. Run Corruption Scan on Video")
+        print("3. Options")
+        print("0. Exit")
 
-        choice = input("Please enter your choice (1-5): ")
+        choice = get_user_choice("Please enter your choice (0-3): ", ["1", "2", "3", "0"])
 
-        if not validate_choice(choice, ["1", "2", "3", "4", "5"]):
-            print("Invalid choice. Please try again.")
-            continue
-
-        if choice == "1":
-            run_scan("audio", script_folder, venv_path)
-        elif choice == "2":
-            run_scan("video", script_folder, venv_path)
-        elif choice == "3":
-            run_scan("video", script_folder, venv_path)
-            run_scan("audio", script_folder, venv_path)
-        elif choice == "4":
-            show_options_menu()
-        elif choice == "5":
-            print("Exiting the program. Goodbye!")
-            break
+        match choice:
+            case "1":
+                run_scan("audio", script_folder, venv_path)
+            case "2":
+                show_video_menu()
+            case "3":
+                show_options_menu()
+            case "0":
+                clear_screen()  # Clear the screen before exiting
+                print("Exiting the program...")
+                time.sleep(0.2)  # Pause
+                clear_screen()
+                break
 
 
 if __name__ == "__main__":

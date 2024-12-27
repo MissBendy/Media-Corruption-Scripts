@@ -61,7 +61,7 @@ if not directories or not isinstance(directories, list):
 max_workers = os.cpu_count()
 
 # Define audio file extensions to check
-AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".wma", ".alac"}
 
 # Define paths
 output_dir = script_folder / "Results"
@@ -69,14 +69,14 @@ output_dir.mkdir(exist_ok=True)
 OUTPUT_CSV = output_dir / "Corrupt_Audio.csv"
 
 
-def validate_audio_ffprobe(file_path):
-    """Validate audio files using ffprobe."""
+def validate_audio_metadata(file_path):
+    """Validate audio file metadata using ffprobe."""
     try:
         file_path = Path(file_path)
         if not file_path.is_file() or file_path.stat().st_size == 0:
             return file_path, "File is empty or does not exist"
 
-        # Use ffprobe to check the file
+        # Use ffprobe to validate the file's metadata
         command = [
             "ffprobe",
             "-v", "error",
@@ -87,11 +87,62 @@ def validate_audio_ffprobe(file_path):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if result.returncode != 0:
-            return file_path, f"FFprobe Error: {result.stderr.strip()}"
+            return file_path, f"Metadata validation failed: {result.stderr.strip()}"
 
-        return None  # File is valid
+        return None  # Metadata is valid
     except Exception as e:
-        return file_path, f"Unexpected Error: {str(e)}"
+        return file_path, f"Metadata validation error: {str(e)}"
+
+
+def validate_audio_playback(file_path):
+    """Validate audio playback at the start, middle, and end using ffmpeg."""
+    try:
+        # Validate playback at the start
+        start_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-ss", "0", "-i",
+                         str(file_path), "-t", "5", "-f", "null", "-"]
+        if subprocess.run(start_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
+            return file_path, "Playback failed at the start"
+
+        # Get the file duration using ffprobe
+        duration_command = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                            str(file_path)]
+        duration_result = subprocess.run(duration_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        duration_str = duration_result.stdout.strip()
+        if not duration_str:
+            return file_path, "Failed to fetch file duration"
+        duration = float(duration_str)
+        midpoint = duration / 2
+
+        # Validate playback at the middle
+        middle_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-ss", str(midpoint), "-i",
+                          str(file_path), "-t", "5", "-f", "null", "-"]
+        if subprocess.run(middle_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
+            return file_path, "Playback failed at the middle"
+
+        # Validate playback at the end
+        end_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-sseof", "-5", "-i",
+                       str(file_path), "-t", "5", "-f", "null", "-"]
+        if subprocess.run(end_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
+            return file_path, "Playback failed at the end"
+
+        return None  # Playback is valid
+    except Exception as e:
+        return file_path, f"Playback validation error: {str(e)}"
+
+
+def validate_audio_file(file_path):
+    """Combine metadata and playback validation for audio files."""
+    # Validate metadata first
+    metadata_result = validate_audio_metadata(file_path)
+    if metadata_result:
+        return metadata_result
+
+    # Validate playback
+    playback_result = validate_audio_playback(file_path)
+    if playback_result:
+        return playback_result
+
+    return None  # File is valid
 
 
 def get_audio_files(dirs):
@@ -116,14 +167,16 @@ def main():
     print(f"{Fore.BLUE}{Style.BRIGHT}Found {len(audio_files)} audio files to scan.{Style.RESET_ALL}\n")
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(validate_audio_ffprobe, file): file for file in audio_files}
+        futures = {executor.submit(validate_audio_file, file): file for file in audio_files}
 
         for future in tqdm(
                 as_completed(futures),
                 total=len(audio_files),
-                bar_format=f"{Fore.RED}{Style.BRIGHT}{{rate_fmt}} {Fore.YELLOW}{Style.BRIGHT}| ETA: {{remaining}} | {Fore.RED}{Style.BRIGHT}{{n_fmt}}/{{total_fmt}} files",
-                unit=" file"
-        ):
+                unit=" file",  # Explicitly set 'file' as the unit
+                bar_format=f"{{desc}}: {Fore.RED}{Style.BRIGHT} {{rate_fmt}}"
+                           f"{Fore.YELLOW}{Style.BRIGHT} | ETA: {{remaining}} | "
+                           f"{Fore.RED}{Style.BRIGHT}{{n}}/{{total}} files"):
+
             result = future.result()
             if result:
                 corrupted_files.append(result)

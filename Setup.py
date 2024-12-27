@@ -294,7 +294,7 @@ class ProgramSetup:
                                                                                                       'Scripts', 'pip')
 
         # List of required packages
-        packages = ["tqdm", "pyyaml", "colorama"]
+        packages = ["tqdm", "pyyaml", "colorama", "psutil"]
 
         # Get the list of installed packages in the virtual environment using pip
         installed_packages = subprocess.check_output([pip_path, 'list', '--format=freeze'], text=True)
