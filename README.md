@@ -31,7 +31,7 @@ Python modules needed to run script include the following
 
 -----------------------------------------------------------------------------------------------------------------------
 
-<ins>**Other Required Software That Installs Automatically:**</ins> $~$ FFmpeg, Chocolately, Nano (on Windows)
+<ins>**Other Required Software That Installs Automatically:**</ins> $~$ FFmpeg on all platforms, Chocolately and Nano (on Windows)
 
 FFmpeg is a multimedia framework that can check video integrity without errors spilling into the terminal. <br />
 It works reliably across video/audio codecs and containers. If FFmpeg cannot decode the file, the file is considered corrupt.<br />
