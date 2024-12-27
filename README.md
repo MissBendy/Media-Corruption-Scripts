@@ -43,3 +43,6 @@ Chocolatey is software management automation for Windows that wraps installers, 
 <ins>**Platform-Specific Installations:**</ins> $~$ Based on the platform (Windows, macOS or Linux) <br />
 
 -----------------------------------------------------------------------------------------------------------------------
+
+> [!IMPORTANT]
+> Windows will prompt for admin rights to install Nano via Chocolatey
