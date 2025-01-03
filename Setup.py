@@ -130,13 +130,24 @@ class FFmpegInstaller:
         try:
             match os_type:
                 case "darwin":  # macOS
-                    print("FFmpeg not found in the PATH. Checking for Homebrew...")
+                    print("FFmpeg not found. Checking for Homebrew...")
                     if not FFmpegInstaller.check_homebrew_installed():
                         FFmpegInstaller.install_homebrew()
 
                     print("Installing FFmpeg using Homebrew...")
-                    subprocess.check_call(["brew", "install", "ffmpeg"])
-                    print(f"{Fore.GREEN}FFmpeg has been installed via Homebrew.")
+                    try:
+                        # Using subprocess.check_call to install FFmpeg with Homebrew
+                        subprocess.check_call(["brew", "install", "ffmpeg"])
+                    except subprocess.CalledProcessError:
+                        pass  # Ignore any errors that occur during installation
+
+                    # After attempting installation, check if FFmpeg is listed by Homebrew
+                    try:
+                        # Run `brew list ffmpeg` to verify if FFmpeg was successfully installed
+                        subprocess.check_call(["brew", "list", "ffmpeg"])
+                        print(f"{Fore.GREEN}FFmpeg has been installed via Homebrew.")
+                    except subprocess.CalledProcessError:
+                        print(f"{Fore.RED}FFmpeg installation failed using Homebrew")
 
                 case "windows":
                     try:
@@ -196,12 +207,12 @@ class DarwinNanoInstaller:
             print(f"{Fore.YELLOW}{Style.BRIGHT}nano not found. Proceeding with installation...{Style.RESET_ALL}")
             try:
                 subprocess.run(["brew", "install", "nano"], check=True)
-                print(f"{Fore.GREEN}Installed nano using Homebrew on macOS.{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}Installed nano using Homebrew{Style.RESET_ALL}")
             except subprocess.CalledProcessError:
-                print(f"{Fore.RED}Failed to install nano using Homebrew on macOS.{Style.RESET_ALL}")
+                print(f"{Fore.RED}Failed to install nano using Homebrew.{Style.RESET_ALL}")
                 return
         else:
-            print(f"{Fore.GREEN}nano is already installed via Homebrew on macOS.{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}nano is already installed via Homebrew.{Style.RESET_ALL}")
 
         # Update ~/.nanorc
         nanorc_path = os.path.expanduser("~/.nanorc")
