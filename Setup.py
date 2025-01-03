@@ -114,9 +114,9 @@ class FFmpegInstaller:
             )
             print("Running install script with bash...")
             subprocess.check_call(["/bin/bash", "-c", script.decode('utf-8')])
-            print("Homebrew installed successfully!")
+            print(f"{Fore.GREEN}Homebrew installed successfully!")
         except subprocess.CalledProcessError as e:
-            print(f"Failed to install Homebrew: {e}")
+            print(f"{Fore.RED}Failed to install Homebrew: {e}")
 
     @staticmethod
     def install_ffmpeg():
