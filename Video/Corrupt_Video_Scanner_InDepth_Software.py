@@ -20,18 +20,6 @@ def handle_error_and_exit(message):
     sys.exit(f"{Fore.RED}Exiting due to error:{Style.RESET_ALL} {message}")
 
 
-def check_python_version():
-    """Ensure the script is running on a compatible Python version."""
-    current_version = sys.version_info
-
-    # Ensure that the Python version is between 3.10 and 3.13
-    if current_version < (3, 10) or current_version >= (3, 14):
-        handle_error_and_exit(
-            f"{Fore.RED}This script requires Python version between 3.10 and 3.13. {Style.RESET_ALL}\n"
-            f"You are using Python {current_version.major}.{current_version.minor}.")
-    print(f"{Fore.YELLOW}Python version is compatible. Proceeding with the script...{Style.RESET_ALL}")
-
-
 # Resolve the base path dynamically based on the script's location
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -218,5 +206,4 @@ def main():
 
 
 if __name__ == "__main__":
-    check_python_version()
     main()

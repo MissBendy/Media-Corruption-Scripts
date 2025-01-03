@@ -108,12 +108,15 @@ class FFmpegInstaller:
     def install_homebrew():
         """Install Homebrew on macOS."""
         try:
-            print("Installing Homebrew...")
-            subprocess.check_call(
-                ["/bin/bash", "-c", "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"])
-            print(f"{Fore.GREEN}Homebrew has been successfully installed.")
-        except CalledProcessError as e:
-            print(f"{Fore.RED}Failed to install Homebrew: {e}")
+            print("Downloading Homebrew install script...")
+            script = subprocess.check_output(
+                ["curl", "-fsSL", "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"]
+            )
+            print("Running install script with bash...")
+            subprocess.check_call(["/bin/bash", "-c", script.decode('utf-8')])
+            print("Homebrew installed successfully!")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to install Homebrew: {e}")
 
     @staticmethod
     def install_ffmpeg():
@@ -170,6 +173,58 @@ class FFmpegInstaller:
             print(f"{Fore.RED}Failed to install FFmpeg: {e}")
 
 
+class DarwinNanoInstaller:
+    @staticmethod
+    def install_nano_and_update_nanorc():
+        """Install nano using Homebrew on macOS and update ~/.nanorc if nano is not installed."""
+
+        def is_nano_installed():
+            """Check if nano is installed via Homebrew on macOS."""
+            try:
+                # Check if nano is installed via Homebrew
+                subprocess.run(["brew", "list", "nano"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return True
+            except subprocess.CalledProcessError:
+                return False  # nano is not installed via Homebrew
+
+        # Ensure this script runs only on macOS
+        if platform.system() != "Darwin":
+            return  # Skip quietly if not macOS
+
+        # Check if nano is installed via Homebrew on macOS
+        if not is_nano_installed():
+            print(f"{Fore.YELLOW}{Style.BRIGHT}nano not found. Proceeding with installation...{Style.RESET_ALL}")
+            try:
+                subprocess.run(["brew", "install", "nano"], check=True)
+                print(f"{Fore.GREEN}Installed nano using Homebrew on macOS.{Style.RESET_ALL}")
+            except subprocess.CalledProcessError:
+                print(f"{Fore.RED}Failed to install nano using Homebrew on macOS.{Style.RESET_ALL}")
+                return
+        else:
+            print(f"{Fore.GREEN}nano is already installed via Homebrew on macOS.{Style.RESET_ALL}")
+
+        # Update ~/.nanorc
+        nanorc_path = os.path.expanduser("~/.nanorc")
+        nanorc_include = 'include "/usr/local/share/nano/*.nanorc"'
+
+        # Check if the line is already in ~/.nanorc
+        try:
+            with open(nanorc_path, "r") as f:
+                if nanorc_include in f.read():
+                    print(f"{Fore.GREEN}~/.nanorc already includes the nano configurations.{Style.RESET_ALL}")
+                    return
+        except FileNotFoundError:
+            pass  # ~/.nanorc doesn't exist yet
+
+        # Append the include line
+        try:
+            with open(nanorc_path, "a") as f:
+                f.write(f"{nanorc_include}\n")
+            print(f"{Fore.GREEN}Updated ~/.nanorc with nano configurations.{Style.RESET_ALL}")
+        except IOError:
+            print(f"{Fore.RED}Failed to update ~/.nanorc.{Style.RESET_ALL}")
+
+
 class ProgramSetup:
     """Class to set up virtual environment, main script, and terminal scripts."""
 
@@ -183,6 +238,9 @@ class ProgramSetup:
         # First, ensure FFmpeg and Homebrew are installed
         ffmpeg_installer = FFmpegInstaller()
         ffmpeg_installer.install_ffmpeg()  # This will use the match/case to install FFmpeg based on the OS
+
+        # Install nano and update ~/.nanorc on macOS
+        DarwinNanoInstaller.install_nano_and_update_nanorc()
 
         # Continue with the rest of the program setup
         venv_path = self.create_virtualenv()
@@ -308,9 +366,9 @@ class ProgramSetup:
         if missing_packages:
             print(f"Installing missing python packages: {', '.join(missing_packages)}...")
             subprocess.check_call([pip_path, "install"] + missing_packages)
-            print(f"{Fore.GREEN}Missing dependencies installed successfully.")
+            print(f"{Fore.GREEN}Missing dependencies installed successfully.{Style.RESET_ALL}")
         else:
-            print(f"{Fore.GREEN}All dependencies are installed.")
+            print(f"{Fore.GREEN}All dependencies are installed.{Style.RESET_ALL}")
 
     @staticmethod
     def generate_terminal_script(venv_path):
