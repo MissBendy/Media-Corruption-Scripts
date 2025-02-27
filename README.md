@@ -1,5 +1,7 @@
 ## Media-Corruption-Scripts
 
+[![asciicast](https://asciinema.org/a/bOGPuR5vhAgYQSNsUUsSaOlL8.svg)](https://asciinema.org/a/bOGPuR5vhAgYQSNsUUsSaOlL8)
+
 Python scripts to scan Audio and Video files to detect corruption on media. <br />
 Corrupted file details are saved to a CSV file for easy review.
 
