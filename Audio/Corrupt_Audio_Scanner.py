@@ -49,7 +49,7 @@ if not directories or not isinstance(directories, list):
 max_workers = os.cpu_count()
 
 # Define audio file extensions to check
-AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".wma", ".alac"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".wma", ".alac" ".opus"}
 
 # Define paths
 output_dir = script_folder / "Results"
