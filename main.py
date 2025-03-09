@@ -49,10 +49,10 @@ def run_scan(scan_type, script_folder, venv_path):
     script_mapping = {
         "audio": "Audio/Corrupt_Audio_Scanner.py",
         "video_meta": "Video/Corrupt_Video_Scanner_MetaData.py",
-        "video_play_hardware": "Video/Corrupt_Video_Scanner_Playback_hardware.py",
-        "video_play_software": "Video/Corrupt_Video_Scanner_Playback_software.py",
-        "video_play_indepth_hardware": "Video/Corrupt_Video_Scanner_InDepth_hardware.py",
-        "video_play_indepth_software": "Video/Corrupt_Video_Scanner_InDepth_software.py"
+        "video_play_hardware": "Video/Corrupt_Video_Scanner_Playback_Hardware.py",
+        "video_play_software": "Video/Corrupt_Video_Scanner_Playback_Software.py",
+        "video_play_indepth_hardware": "Video/Corrupt_Video_Scanner_InDepth_Hardware.py",
+        "video_play_indepth_software": "Video/Corrupt_Video_Scanner_InDepth_Software.py"
     }
 
     script_name = script_mapping.get(scan_type)
@@ -245,9 +245,9 @@ def show_options_menu():
 
         match choice:
             case "1":
-                edit_config("Audio/Config/config.yaml")
+                edit_config("Audio/Config/Config.yaml")
             case "2":
-                edit_config("Video/Config/config.yaml")
+                edit_config("Video/Config/Config.yaml")
             case "3":
                 update_pip_and_packages()
             case "0":
