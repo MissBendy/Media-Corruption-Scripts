@@ -40,6 +40,8 @@ It works reliably across video/audio codecs and containers. If FFmpeg cannot dec
 
 Chocolatey is software management automation for Windows that wraps installers, executables, zips, and scripts into compiled packages.
 
+Nano is a simple terminal text editor.
+
 <ins>**Cross-Platform Dependency Check:**</ins> $~$ Setup script will look for required installations across Windows, macOS and Linux.
 
 <ins>**Platform-Specific Installations:**</ins> $~$ Based on the platform (Windows, macOS or Linux) <br />
