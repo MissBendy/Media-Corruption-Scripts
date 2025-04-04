@@ -48,11 +48,11 @@ def run_scan(scan_type, script_folder, venv_path):
     # Determine the script path based on the scan type
     script_mapping = {
         "audio": "Audio/Corrupt_Audio_Scanner.py",
-        "video_meta": "Video/Corrupt_Video_Scanner_MetaData.py",
-        "video_play_hardware": "Video/Corrupt_Video_Scanner_Playback_Hardware.py",
-        "video_play_software": "Video/Corrupt_Video_Scanner_Playback_Software.py",
-        "video_play_indepth_hardware": "Video/Corrupt_Video_Scanner_InDepth_Hardware.py",
-        "video_play_indepth_software": "Video/Corrupt_Video_Scanner_InDepth_Software.py"
+        "video_meta": "Video/Corrupt_Video_Scanner.py",
+        "video_play_hardware": "Video/Corrupt_Video_Scanner.py",
+        "video_play_software": "Video/Corrupt_Video_Scanner.py",
+        "video_play_indepth_hardware": "Video/Corrupt_Video_Scanner.py",
+        "video_play_indepth_software": "Video/Corrupt_Video_Scanner.py"
     }
 
     script_name = script_mapping.get(scan_type)
@@ -73,8 +73,23 @@ def run_scan(scan_type, script_folder, venv_path):
     if python_exec:
         process = None  # Initialize process to None
         try:
+            # Construct the argument list based on scan type using match-case
+            match scan_type:
+                case "video_meta":
+                    arguments = ["--validation", "metadata"]
+                case "video_play_hardware":
+                    arguments = ["--validation", "playback", "--decoder", "hardware"]
+                case "video_play_software":
+                    arguments = ["--validation", "playback", "--decoder", "software"]
+                case "video_play_indepth_hardware":
+                    arguments = ["--validation", "indepth", "--decoder", "hardware"]
+                case "video_play_indepth_software":
+                    arguments = ["--validation", "indepth", "--decoder", "software"]
+                case _:
+                    arguments = []
+
             # Run the script as a standalone process (no output redirection)
-            process = subprocess.Popen([python_exec, "-u", scanner_script],
+            process = subprocess.Popen([python_exec, "-u", scanner_script] + arguments,
                                        text=True,  # Ensure text output (no buffering issues)
                                        pass_fds=(),  # Make sure file descriptors are not passed
                                        close_fds=True)  # Ensure no file descriptors are shared
