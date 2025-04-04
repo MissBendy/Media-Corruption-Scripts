@@ -20,7 +20,7 @@ MUST BE CHANGED TO WORK WITH YOUR SYSTEM
 Python modules needed to run script include the following
 
 * colorama $~~$ # For colored terminal output
-* tqdm $~~~~~~~~~~$ # For progress bar display
+* tqdm $~~~~~~~~~$ # For progress bar display
 * pyyaml $~~~~~~$ # For YAML file support
 * psutil $~~~~~~~~~$ # For retrieving information on running processes
 
