@@ -42,7 +42,7 @@ class System:
     detected_distro_type = None
 
     @staticmethod
-    def detect_OS():
+    def detect_os():
         """Detect OS and store distribution type for reuse."""
         try:
             os_name = platform.system().lower()
@@ -163,7 +163,7 @@ class FFmpegInstaller:
                     print(f"{Fore.GREEN}FFmpeg has been installed using winget.{Fore.RESET}")
 
                 case "linux":
-                    distro_type = System.detected_distro_type or System.detect_OS()
+                    distro_type = System.detected_distro_type or System.detect_os()
 
                     match distro_type:
                         case "Arch-based":
@@ -467,7 +467,7 @@ def main():
     if __name__ == "__main__":
         System.check_python_version()
 
-        detected_os = System.detect_OS()
+        detected_os = System.detect_os()
         if detected_os == "Unsupported OS":
             handle_error_and_exit(f"{Fore.RED}Unsupported OS detected.{Style.RESET_ALL}")
 
