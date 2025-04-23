@@ -49,7 +49,7 @@ if not directories or not isinstance(directories, list):
 max_workers = os.cpu_count()
 
 # Define audio file extensions to check
-AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".wma", ".alac" ".opus"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".wma", ".alac", ".opus"}
 
 # Define paths
 output_dir = script_folder / "Results"
@@ -86,7 +86,7 @@ def validate_audio_playback(file_path):
     """Validate audio playback at the start, middle, and end using ffmpeg."""
     try:
         # Validate playback at the start
-        start_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-ss", "0", "-i",
+        start_command = ["ffmpeg", "-v", "error", "-ss", "0", "-i",
                          str(file_path), "-t", "5", "-f", "null", "-"]
         if subprocess.run(start_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
             return file_path, "Playback failed at the start"
@@ -102,13 +102,13 @@ def validate_audio_playback(file_path):
         midpoint = duration / 2
 
         # Validate playback at the middle
-        middle_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-ss", str(midpoint), "-i",
+        middle_command = ["ffmpeg", "-v", "error", "-ss", str(midpoint), "-i",
                           str(file_path), "-t", "5", "-f", "null", "-"]
         if subprocess.run(middle_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
             return file_path, "Playback failed at the middle"
 
         # Validate playback at the end
-        end_command = ["ffmpeg", "-v", "error", "-hwaccel", "auto", "-sseof", "-5", "-i",
+        end_command = ["ffmpeg", "-v", "error", "-sseof", "-5", "-i",
                        str(file_path), "-t", "5", "-f", "null", "-"]
         if subprocess.run(end_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
             return file_path, "Playback failed at the end"
@@ -119,18 +119,25 @@ def validate_audio_playback(file_path):
 
 
 def validate_audio_file(file_path):
-    """Combine metadata and playback validation for audio files."""
-    # Validate metadata first
+    """Validate both metadata and playback independently."""
+    metadata_error = None
+    playback_error = None
+
+    # Always attempt metadata check
     metadata_result = validate_audio_metadata(file_path)
     if metadata_result:
-        return metadata_result
+        metadata_error = metadata_result[1]
 
-    # Validate playback
+    # Always attempt playback check
     playback_result = validate_audio_playback(file_path)
     if playback_result:
-        return playback_result
+        playback_error = playback_result[1]
 
-    return None  # File is valid
+    # Return errors if present
+    if metadata_error or playback_error:
+        return (str(file_path), playback_error or "", metadata_error or "")
+
+    return None  # File is fully valid
 
 
 def get_audio_files(dirs):
@@ -171,7 +178,7 @@ def main():
 
     with open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["File Path", "Error"])
+        writer.writerow(["File Path", "Playback Error", "Metadata Error"])
         writer.writerows(corrupted_files)
 
     end_time = time.time()
